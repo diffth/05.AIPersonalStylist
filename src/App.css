@@ -125,13 +125,14 @@
   background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  pointer-events: none; /* 드래그 오작동 방지 */
 }
 
 .upload-hint {
   font-size: 0.9rem;
   color: var(--text-secondary);
   text-align: center;
-  pointer-events: none;
+  pointer-events: none; /* 드래그 오작동 방지 */
 }
 
 .upload-hint span {
