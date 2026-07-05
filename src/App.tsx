@@ -162,8 +162,19 @@ JSON 구조 예시:
           })
         });
       } 
+      // 프로덕션 배포 서버 환경인 경우: Cloudflare Pages Functions 백엔드 프록시 호출
       else {
-        response = await fetch('/api/analyze', { method: 'POST', body: JSON.stringify({ image, height, weight }) });
+        response = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            image,
+            height,
+            weight
+          })
+        });
       }
 
       if (!response.ok) {
