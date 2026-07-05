@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://05-aipersonalstylist.pages.dev/sitemap.xml

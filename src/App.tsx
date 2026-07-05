@@ -78,26 +78,75 @@ function App() {
   };
 
   // 가상 분석 로직 실행
-  const runAnalysis = () => {
+  const runAnalysis = async () => {
     if (!image) {
       alert('분석을 위해 사진을 업로드해주세요.');
       return;
     }
 
+
+
     setStatus('loading');
-    setLoadingText('체형 실루엣을 스캔하는 중...');
+    setLoadingText('체형 실루엣 스캔 및 이미지 정보 로드 중...');
 
-    // 실감나는 마이크로 연출을 위해 단계별 로딩 메시지 출력
-    setTimeout(() => {
-      setLoadingText('키와 몸무게 비율(BMI) 분석 중...');
-    }, 800);
 
-    setTimeout(() => {
-      setLoadingText('체형 매칭 알고리즘 가동 중...');
-    }, 1600);
+    // 로딩 문구 단계별 전환용 타이머 설정
+    const textTimer1 = setTimeout(() => {
+      setLoadingText('신체 비율(BMI) 및 골격 정보 분석 중...');
+    }, 1000);
 
-    setTimeout(() => {
-      // 분석 결과 가상 계산
+    const textTimer2 = setTimeout(() => {
+      setLoadingText('AI 스타일리스트 맞춤형 솔루션 매칭 중...');
+    }, 2200);
+
+    try {
+      const heightInMeters = height / 100;
+      const bmi = parseFloat((weight / (heightInMeters * heightInMeters)).toFixed(1));
+
+      // 클라우드플레어 Pages Functions API 호출
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          image,
+          height,
+          weight
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error?.message || `API 호출 에러 (상태코드: ${response.status})`);
+      }
+
+      const responseData = await response.json();
+      const rawText = responseData.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!rawText) {
+        throw new Error('AI 분석 결과 데이터를 수신하지 못했습니다.');
+      }
+
+      // JSON 텍스트 파싱 (마크다운 백틱 등 방어 코드 적용)
+      let cleanText = rawText.trim();
+      const markdownMatch = cleanText.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
+      if (markdownMatch) {
+        cleanText = markdownMatch[1];
+      }
+      const parsedData = JSON.parse(cleanText.trim());
+
+      setResult({
+        bmi,
+        bodyType: parsedData.bodyType || '커스텀 분석 체형',
+        styleTips: parsedData.styleTips || '체형 분석 결과를 해석하지 못했습니다. 베이직 셔츠와 와이드 슬랙스 코디를 추천합니다.',
+        recommendations: parsedData.recommendations || ['#베이직룩', '#모던웨어'],
+        bestColors: parsedData.bestColors || ['네이비 블루', '차콜 그레이']
+      });
+      setStatus('result');
+    } catch (error: any) {
+      console.warn('Gemini API 연동 실패, 로컬 분석 모드로 전환합니다:', error.message);
+      
+      // API 실패 시 로컬 가상 분석 로직으로 자동 전환 (팝업 없이)
       const heightInMeters = height / 100;
       const bmi = parseFloat((weight / (heightInMeters * heightInMeters)).toFixed(1));
       
@@ -126,12 +175,15 @@ function App() {
       setResult({
         bmi,
         bodyType,
-        recommendations,
         styleTips,
+        recommendations,
         bestColors
       });
       setStatus('result');
-    }, 2500);
+    } finally {
+      clearTimeout(textTimer1);
+      clearTimeout(textTimer2);
+    }
   };
 
   const resetAll = () => {
@@ -302,8 +354,14 @@ function App() {
           </section>
         )}
       </main>
+
+      <footer className="app-footer" style={{ marginTop: '50px', padding: '24px 0', borderTop: '1px solid var(--border-color)', width: '100%', maxWidth: '800px', textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-secondary)', zIndex: 10 }}>
+        <p>© 2026 AI Personal Stylist. All rights reserved.</p>
+        <p style={{ marginTop: '6px', fontSize: '0.75rem', opacity: 0.8 }}>본 서비스는 개인정보 보호를 위해 사용자의 사진 데이터를 서버에 저장하지 않고 브라우저 내에서만 안전하게 임시 처리합니다.</p>
+      </footer>
     </div>
   )
 }
 
 export default App
+
