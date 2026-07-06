@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import type { DragEvent, ChangeEvent } from 'react'
+import { supabase } from './supabaseClient'
 
 type AppState = 'idle' | 'loading' | 'result';
 
@@ -22,11 +23,11 @@ function App() {
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 스크롤 및 패럴랙스 상태
+  // scrolled 상태 선언
   const [scrolled, setScrolled] = useState<boolean>(false);
   const [scrollY, setScrollY] = useState<number>(0);
 
-  // 임시 인증 관련 상태
+  // Supabase Auth 관련 상태
   const [user, setUser] = useState<any>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
@@ -48,6 +49,19 @@ function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Supabase Auth 세션 리스너 및 초기 조회
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   // 스크롤 리빌 애니메이션 효과
   useEffect(() => {
     const revealCallback = (entries: IntersectionObserverEntry[]) => {
@@ -66,22 +80,45 @@ function App() {
     return () => observer.disconnect();
   }, [status]);
 
-  // 임시 인증 처리 (Mock)
+  // 인증 제출 처리
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError('');
     setAuthLoading(true);
 
-    setTimeout(() => {
-      setUser({ email: authEmail });
-      setIsAuthModalOpen(false);
+    try {
+      if (authMode === 'login') {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: authEmail,
+          password: authPassword,
+        });
+        if (error) throw error;
+        setIsAuthModalOpen(false);
+        setAuthEmail('');
+        setAuthPassword('');
+      } else {
+        const { error } = await supabase.auth.signUp({
+          email: authEmail,
+          password: authPassword,
+        });
+        if (error) throw error;
+        alert('회원가입 요청이 전달되었습니다. 가입 승인 이메일을 확인하거나 로그인해 주세요!');
+        setAuthMode('login');
+        setAuthPassword('');
+      }
+    } catch (err: any) {
+      if (err.message === 'email rate limit exceeded' || err.message?.includes('rate limit')) {
+        setAuthError('단시간 내에 너무 많은 인증 메일이 발송되었습니다. (수파베이스 1시간 발송 제한 초과)\n\n[해결 방법]\nSupabase 대시보드 -> Authentication -> Providers -> Email 메뉴에서 "Confirm email" 설정을 꺼주시면 인증 메일 발송 없이 즉시 가입 및 로그인이 가능합니다!');
+      } else {
+        setAuthError(err.message || '인증 에러가 발생했습니다.');
+      }
+    } finally {
       setAuthLoading(false);
-      alert(`${authMode === 'login' ? '로그인' : '회원가입'}에 성공했습니다. (임시 모드)`);
-    }, 1000);
+    }
   };
 
-  const handleSignOut = () => {
-    setUser(null);
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
   };
 
   // 드래그 앤 드롭 이벤트 처리
@@ -140,6 +177,7 @@ function App() {
   // 분석 실행
   const runAnalysis = async () => {
     if (!user) {
+      setAuthError('스타일 분석을 이용하려면 먼저 로그인해야 합니다.');
       setAuthMode('login');
       setIsAuthModalOpen(true);
       return;
@@ -279,7 +317,7 @@ JSON 구조 예시:
         bestColors = ['웜 아이보리', '올리브 그린', '파스텔 블러썸'];
       } else if (bmi >= 23 && bmi < 25) {
         bodyType = '탄탄하고 듬직한 에슬레저 체형';
-        styleTips = '골격과 근육이 발달한 건강미 넘치는 체형입니다. 지나치게 타이트한 옷보다는 자연스러운 세미 오버핏 셔츠와 테이퍼드 팬츠 조합이 좋습니다. 스포티한 디테일을 가미해 매력을 극대화해보세요.';
+        styleTips = '골격과 근육이 발달한 건강미 넘치는 체형입니다. 지나치게 타이트한 옷보다는 자연스러운 세미 오버핏 셔츠 and 테이퍼드 팬츠 조합이 좋습니다. 스포티한 디테일을 가미해 매력을 극대화해보세요.';
         recommendations = ['#아메카지룩', '#스포티캐주얼', '#세미오버핏'];
         bestColors = ['카키 그린', '머스타드 옐로우', '매트 블랙'];
       } else if (bmi >= 25) {
