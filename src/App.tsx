@@ -40,6 +40,24 @@ function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // 스크롤 리빌 애니메이션 효과
+  useEffect(() => {
+    const revealCallback = (entries: IntersectionObserverEntry[]) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('active');
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(revealCallback, {
+      threshold: 0.1
+    });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    return () => observer.disconnect();
+  }, [status]);
+
   // 드래그 앤 드롭 이벤트 처리
   const handleDrag = (e: DragEvent) => {
     e.preventDefault();
@@ -287,10 +305,60 @@ JSON 구조 예시:
         </nav>
       </header>
 
-      <main className="main-layout">
+      <main className="pt-24 flex-grow">
         {status === 'idle' && (
-          <section className="glass-card">
-            <h2 className="card-title">스타일 분석 정보 입력</h2>
+          <>
+            {/* Hero Section */}
+            <section className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop grid grid-cols-1 md:grid-cols-2 gap-12 items-center min-h-[80vh] py-12 md:py-24">
+              <div className="order-2 md:order-1 reveal active">
+                <span className="font-label-caps text-primary tracking-widest block mb-4">REDEFINING PERSONAL STYLE</span>
+                <h1 className="font-display-lg text-display-lg-mobile md:text-display-lg mb-6 leading-tight">
+                  Your AI Style <br /><span className="italic font-normal">Evolution</span>
+                </h1>
+                <p className="text-body-lg text-on-surface-variant mb-10 max-w-md">
+                  Experience a luxury styling journey powered by advanced neural analysis. Aura understands your silhouette, your vibe, and your future wardrobe.
+                </p>
+                <div className="flex flex-wrap gap-4">
+                  <a className="bg-deep-lavender text-on-primary px-8 py-4 rounded-lg font-button shadow-lg hover:shadow-xl transition-all active:scale-95 text-center" href="#analysis-start">
+                    Start Your Evolution
+                  </a>
+                  <button className="border border-outline-variant text-on-surface px-8 py-4 rounded-lg font-button hover:bg-surface-container transition-colors">
+                    Explore Looks
+                  </button>
+                </div>
+              </div>
+              <div className="order-1 md:order-2 relative reveal active" style={{ transitionDelay: '200ms' }}>
+                <div className="rounded-2xl overflow-hidden shadow-2xl aspect-[4/5] transform md:rotate-2 hover:rotate-0 transition-transform duration-700">
+                  <img 
+                    alt="Fashion editorial image" 
+                    className="w-full h-full object-cover transition-transform duration-300" 
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuAn2eUA4R5swD506hmnsLD0-jKQnZPv7ba1GVuv5l2Q8CLfRKEieiMdnsm7oFhyIMh7XWPzC3XeEM6mXjWsJrKWdsM7zoWPma61kReZSjmacGqLWf9lCP1KiTftjsdCbqHhPWs7dLnCpuFbVw52fMdMH2OKoOOFYqH5o9WSc4bkVgjkCXAKsR-W7fmjZbdD1zHYVHDYrJy3bI86oVR94UdWSKsDWC6KYZslQgb2sUk4cl0fAQSzs80C"
+                    style={{ transform: `translateY(${scrollY * 0.05}px)` }}
+                  />
+                </div>
+                <div className="absolute -bottom-6 -left-6 glass-card p-6 rounded-xl hidden md:block shadow-xl">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center">
+                      <span className="material-symbols-outlined text-primary">auto_awesome</span>
+                    </div>
+                    <div>
+                      <p className="font-label-caps text-on-surface text-xs font-semibold">AI ANALYSIS READY</p>
+                      <p className="text-body-sm text-on-surface-variant text-xs">98.4% Precision Score</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Style Analysis Form Section */}
+            <section className="bg-surface-container-low py-16 md:py-24" id="analysis-start">
+              <div className="max-w-3xl mx-auto px-margin-mobile reveal active">
+                <div className="text-center mb-12">
+                  <h2 className="font-headline-md text-on-surface mb-4">Precision Profiling</h2>
+                  <p className="text-body-md text-on-surface-variant">Input your measurements for a hyper-accurate 3D silhouette reconstruction.</p>
+                </div>
+                <div className="glass-card p-8 md:p-12 rounded-3xl shadow-sm border border-outline-variant/30">
+                  <form className="space-y-12" onSubmit={(e) => e.preventDefault()}>
             
             {/* 사진 업로드 */}
             <div className="upload-section">
@@ -327,56 +395,50 @@ JSON 구조 예시:
               />
             </div>
 
-            {/* 신체 사이즈 입력 */}
-            <div className="input-grid">
-              <div className="input-group">
-                <label htmlFor="height-input">키 (Height)</label>
-                <div className="input-wrapper">
-                  <input 
-                    id="height-input"
-                    type="number" 
-                    value={height}
-                    min="100"
-                    max="250"
-                    onChange={(e) => setHeight(Number(e.target.value))}
-                    className="styled-input"
-                  />
-                  <span className="unit">cm</span>
-                </div>
-                <input 
-                  type="range"
-                  min="100"
-                  max="250"
-                  value={height}
-                  onChange={(e) => setHeight(Number(e.target.value))}
-                  className="range-slider"
-                />
-              </div>
-
-              <div className="input-group">
-                <label htmlFor="weight-input">몸무게 (Weight)</label>
-                <div className="input-wrapper">
-                  <input 
-                    id="weight-input"
-                    type="number" 
-                    value={weight}
-                    min="30"
-                    max="200"
-                    onChange={(e) => setWeight(Number(e.target.value))}
-                    className="styled-input"
-                  />
-                  <span className="unit">kg</span>
-                </div>
-                <input 
-                  type="range"
-                  min="30"
-                  max="200"
-                  value={weight}
-                  onChange={(e) => setWeight(Number(e.target.value))}
-                  className="range-slider"
-                />
-              </div>
-            </div>
+                    {/* Measurements Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                      {/* Height Slider */}
+                      <div className="space-y-6">
+                        <div className="flex justify-between items-center">
+                          <label className="font-label-caps text-on-surface-variant tracking-wider font-semibold">HEIGHT (CM)</label>
+                          <span className="font-headline-sm text-primary font-bold" id="height-val">{height}</span>
+                        </div>
+                        <input 
+                          className="w-full h-1.5 bg-outline-variant rounded-lg appearance-none cursor-pointer" 
+                          id="height-slider" 
+                          max="210" 
+                          min="140" 
+                          type="range" 
+                          value={height}
+                          onChange={(e) => setHeight(Number(e.target.value))}
+                        />
+                        <div className="flex justify-between text-[10px] text-outline font-bold">
+                          <span>140CM</span>
+                          <span>210CM</span>
+                        </div>
+                      </div>
+                      
+                      {/* Weight Slider */}
+                      <div className="space-y-6">
+                        <div className="flex justify-between items-center">
+                          <label className="font-label-caps text-on-surface-variant tracking-wider font-semibold">WEIGHT (KG)</label>
+                          <span className="font-headline-sm text-primary font-bold" id="weight-val">{weight}</span>
+                        </div>
+                        <input 
+                          className="w-full h-1.5 bg-outline-variant rounded-lg appearance-none cursor-pointer" 
+                          id="weight-slider" 
+                          max="150" 
+                          min="40" 
+                          type="range" 
+                          value={weight}
+                          onChange={(e) => setWeight(Number(e.target.value))}
+                        />
+                        <div className="flex justify-between text-[10px] text-outline font-bold">
+                          <span>40KG</span>
+                          <span>150KG</span>
+                        </div>
+                      </div>
+                    </div>
 
             {/* 분석 버튼 */}
             <button 
