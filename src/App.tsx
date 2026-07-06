@@ -1,6 +1,5 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import type { DragEvent, ChangeEvent } from 'react'
-import './App.css'
 
 
 type AppState = 'idle' | 'loading' | 'result';
@@ -23,6 +22,23 @@ function App() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 스크롤 상태
+  const [scrolled, setScrolled] = useState<boolean>(false);
+  const [scrollY, setScrollY] = useState<number>(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.pageYOffset);
+      if (window.scrollY > 20) {
+        setScrolled(true);
+      } else {
+        setScrolled(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // 드래그 앤 드롭 이벤트 처리
   const handleDrag = (e: DragEvent) => {
@@ -253,10 +269,22 @@ JSON 구조 예시:
   };
 
   return (
-    <div className="app-container">
-      <header className="app-header">
-        <h1 className="brand-title">AI Personal Stylist</h1>
-        <p className="brand-subtitle">나만의 맞춤형 퍼스널 패션 테일러</p>
+    <div className="bg-surface text-on-surface font-body-md selection:bg-primary-container selection:text-on-primary-container min-h-screen flex flex-col">
+      {/* Top Navigation Bar */}
+      <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-surface/80 backdrop-blur-md shadow-sm border-b border-outline-variant/20' : 'bg-transparent'}`}>
+        <nav className="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-4 max-w-container-max mx-auto w-full">
+          <div className="font-display-lg text-headline-sm tracking-tighter text-charcoal-text cursor-pointer" onClick={resetAll}>AURA FASHION</div>
+          <div className="hidden md:flex items-center gap-8">
+            <a className="text-primary border-b-2 border-primary pb-1 font-body-sm" href="#" onClick={(e) => { e.preventDefault(); resetAll(); }}>Styling</a>
+            <a className="text-on-surface-variant hover:text-primary transition-colors font-body-sm" href="#" onClick={(e) => e.preventDefault()}>Virtual Closet</a>
+            <a className="text-on-surface-variant hover:text-primary transition-colors font-body-sm" href="#" onClick={(e) => e.preventDefault()}>Trending</a>
+            <a className="text-on-surface-variant hover:text-primary transition-colors font-body-sm" href="#" onClick={(e) => e.preventDefault()}>Privacy</a>
+          </div>
+          <div className="flex items-center gap-4">
+            <button className="text-primary font-button hover:opacity-80 transition-opacity">Sign In</button>
+            <button className="bg-primary text-on-primary px-6 py-2 rounded-full font-button hover:opacity-90 active:scale-95 transition-all shadow-md">Join Club</button>
+          </div>
+        </nav>
       </header>
 
       <main className="main-layout">
@@ -416,9 +444,28 @@ JSON 구조 예시:
         )}
       </main>
 
-      <footer className="app-footer" style={{ marginTop: '50px', padding: '24px 0', borderTop: '1px solid var(--border-color)', width: '100%', maxWidth: '800px', textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-secondary)', zIndex: 10 }}>
-        <p>© 2026 AI Personal Stylist. All rights reserved.</p>
-        <p style={{ marginTop: '6px', fontSize: '0.75rem', opacity: 0.8 }}>본 서비스는 개인정보 보호를 위해 사용자의 사진 데이터를 서버에 저장하지 않고 브라우저 내에서만 안전하게 임시 처리합니다.</p>
+      {/* Footer */}
+      <footer className="w-full bg-surface-container border-t border-outline-variant mt-12">
+        <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-12 flex flex-col md:flex-row justify-between items-center gap-8 w-full">
+          <div className="flex flex-col items-center md:items-start gap-2">
+            <div className="font-display-lg text-headline-sm text-primary font-bold">AURA</div>
+            <p className="text-body-sm text-on-surface-variant text-center md:text-left text-xs">© 2026 AURA AI Fashion Consultant. All rights reserved.</p>
+          </div>
+          <div className="flex flex-wrap justify-center gap-8">
+            <a className="text-body-sm text-on-surface-variant hover:text-primary transition-colors underline text-xs" href="#" onClick={(e) => e.preventDefault()}>Privacy Policy</a>
+            <a className="text-body-sm text-on-surface-variant hover:text-primary transition-colors underline text-xs" href="#" onClick={(e) => e.preventDefault()}>Terms of Service</a>
+            <a className="text-body-sm text-on-surface-variant hover:text-primary transition-colors underline text-xs" href="#" onClick={(e) => e.preventDefault()}>GDPR Compliance</a>
+            <a className="text-body-sm text-on-surface-variant hover:text-primary transition-colors underline text-xs" href="#" onClick={(e) => e.preventDefault()}>Support</a>
+          </div>
+          <div className="flex gap-4">
+            <div className="w-10 h-10 rounded-full border border-outline-variant flex items-center justify-center hover:bg-surface-container-high cursor-pointer transition-colors">
+              <span className="material-symbols-outlined text-sm">social_leaderboard</span>
+            </div>
+            <div className="w-10 h-10 rounded-full border border-outline-variant flex items-center justify-center hover:bg-surface-container-high cursor-pointer transition-colors">
+              <span className="material-symbols-outlined text-sm">share</span>
+            </div>
+          </div>
+        </div>
       </footer>
     </div>
   )
