@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import type { DragEvent, ChangeEvent } from 'react'
 
-
 type AppState = 'idle' | 'loading' | 'result';
 
 interface AnalysisResult {
@@ -15,7 +14,7 @@ interface AnalysisResult {
 function App() {
   const [image, setImage] = useState<string | null>(null);
   const [height, setHeight] = useState<number>(170);
-  const [weight, setWeight] = useState<number>(65);
+  const [weight, setWeight] = useState<number>(62);
   const [isDragActive, setIsDragActive] = useState<boolean>(false);
   const [status, setStatus] = useState<AppState>('idle');
   const [loadingText, setLoadingText] = useState<string>('이미지를 분석하고 있습니다...');
@@ -23,9 +22,18 @@ function App() {
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 스크롤 상태
+  // 스크롤 및 패럴랙스 상태
   const [scrolled, setScrolled] = useState<boolean>(false);
   const [scrollY, setScrollY] = useState<number>(0);
+
+  // 임시 인증 관련 상태
+  const [user, setUser] = useState<any>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const [authEmail, setAuthEmail] = useState<string>('');
+  const [authPassword, setAuthPassword] = useState<string>('');
+  const [authError, setAuthError] = useState<string>('');
+  const [authLoading, setAuthLoading] = useState<boolean>(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -57,6 +65,24 @@ function App() {
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
     return () => observer.disconnect();
   }, [status]);
+
+  // 임시 인증 처리 (Mock)
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
+    setAuthLoading(true);
+
+    setTimeout(() => {
+      setUser({ email: authEmail });
+      setIsAuthModalOpen(false);
+      setAuthLoading(false);
+      alert(`${authMode === 'login' ? '로그인' : '회원가입'}에 성공했습니다. (임시 모드)`);
+    }, 1000);
+  };
+
+  const handleSignOut = () => {
+    setUser(null);
+  };
 
   // 드래그 앤 드롭 이벤트 처리
   const handleDrag = (e: DragEvent) => {
@@ -111,20 +137,22 @@ function App() {
     fileInputRef.current?.click();
   };
 
-  // 가상 분석 로직 실행
+  // 분석 실행
   const runAnalysis = async () => {
+    if (!user) {
+      setAuthMode('login');
+      setIsAuthModalOpen(true);
+      return;
+    }
+
     if (!image) {
       alert('분석을 위해 사진을 업로드해주세요.');
       return;
     }
 
-
-
     setStatus('loading');
     setLoadingText('체형 실루엣 스캔 및 이미지 정보 로드 중...');
 
-
-    // 로딩 문구 단계별 전환용 타이머 설정
     const textTimer1 = setTimeout(() => {
       setLoadingText('신체 비율(BMI) 및 골격 정보 분석 중...');
     }, 1000);
@@ -139,14 +167,12 @@ function App() {
 
       let response: Response;
 
-      // 로컬 개발 환경인 경우: .env API 키를 활용해 직접 구글 Gemini API 호출
       if (import.meta.env.DEV) {
         const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
         if (!apiKey) {
           throw new Error('로컬 개발을 위한 구글 제미나이 API 키(VITE_GEMINI_API_KEY)가 .env 파일에 설정되지 않았습니다.');
         }
 
-        // 이미지 Base64 데이터 추출
         const commaIndex = image.indexOf(',');
         const base64DataOnly = image.substring(commaIndex + 1);
         const mimeTypeMatch = image.match(/data:([^;]+);base64/);
@@ -195,9 +221,7 @@ JSON 구조 예시:
             ]
           })
         });
-      } 
-      // 프로덕션 배포 서버 환경인 경우: Cloudflare Pages Functions 백엔드 프록시 호출
-      else {
+      } else {
         response = await fetch('/api/analyze', {
           method: 'POST',
           headers: {
@@ -222,7 +246,6 @@ JSON 구조 예시:
         throw new Error('AI 분석 결과 데이터를 수신하지 못했습니다.');
       }
 
-      // JSON 텍스트 파싱 (마크다운 백틱 등 방어 코드 적용)
       let cleanText = rawText.trim();
       const markdownMatch = cleanText.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
       if (markdownMatch) {
@@ -241,7 +264,6 @@ JSON 구조 예시:
     } catch (error: any) {
       console.warn('Gemini API 연동 실패, 로컬 분석 모드로 전환합니다:', error.message);
       
-      // API 실패 시 로컬 가상 분석 로직으로 자동 전환 (팝업 없이)
       const heightInMeters = height / 100;
       const bmi = parseFloat((weight / (heightInMeters * heightInMeters)).toFixed(1));
       
@@ -299,8 +321,32 @@ JSON 구조 예시:
             <a className="text-on-surface-variant hover:text-primary transition-colors font-body-sm" href="#" onClick={(e) => e.preventDefault()}>Privacy</a>
           </div>
           <div className="flex items-center gap-4">
-            <button className="text-primary font-button hover:opacity-80 transition-opacity">Sign In</button>
-            <button className="bg-primary text-on-primary px-6 py-2 rounded-full font-button hover:opacity-90 active:scale-95 transition-all shadow-md">Join Club</button>
+            {user ? (
+              <div className="flex items-center gap-4">
+                <span className="text-on-surface-variant text-body-sm font-semibold hidden md:inline">{user.email}</span>
+                <button 
+                  onClick={handleSignOut} 
+                  className="text-primary font-button hover:opacity-80 transition-opacity"
+                >
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <>
+                <button 
+                  onClick={() => { setAuthMode('login'); setAuthError(''); setIsAuthModalOpen(true); }}
+                  className="text-primary font-button hover:opacity-80 transition-opacity"
+                >
+                  Sign In
+                </button>
+                <button 
+                  onClick={() => { setAuthMode('signup'); setAuthError(''); setIsAuthModalOpen(true); }}
+                  className="bg-primary text-on-primary px-6 py-2 rounded-full font-button hover:opacity-90 active:scale-95 transition-all shadow-md"
+                >
+                  Join Club
+                </button>
+              </>
+            )}
           </div>
         </nav>
       </header>
@@ -359,42 +405,6 @@ JSON 구조 예시:
                 </div>
                 <div className="glass-card p-8 md:p-12 rounded-3xl shadow-sm border border-outline-variant/30">
                   <form className="space-y-12" onSubmit={(e) => e.preventDefault()}>
-            
-            {/* 사진 업로드 */}
-            <div className="upload-section">
-              <span className="upload-label">본인의 전신 또는 스타일 사진</span>
-              <div 
-                className={`dropzone ${isDragActive ? 'active' : ''} ${image ? 'has-image' : ''}`}
-                onDragEnter={handleDrag}
-                onDragOver={handleDrag}
-                onDragLeave={handleDrag}
-                onDrop={handleDrop}
-                onClick={triggerFileInput}
-              >
-                {image ? (
-                  <div className="preview-container">
-                    <img src={image} alt="Uploaded style preview" className="preview-image" />
-                    <button type="button" className="remove-btn" onClick={removeImage}>&times;</button>
-                  </div>
-                ) : (
-                  <>
-                    <div className="upload-icon">✦</div>
-                    <p className="upload-hint">
-                      여기로 사진을 <span>드래그앤드롭</span> 하거나<br />
-                      클릭하여 이미지를 업로드하세요.
-                    </p>
-                  </>
-                )}
-              </div>
-              <input 
-                type="file" 
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                accept="image/*"
-                className="file-input"
-              />
-            </div>
-
                     {/* Measurements Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                       {/* Height Slider */}
@@ -440,71 +450,285 @@ JSON 구조 예시:
                       </div>
                     </div>
 
-            {/* 분석 버튼 */}
-            <button 
-              type="button" 
-              onClick={runAnalysis}
-              disabled={!image}
-              className="action-button"
-            >
-              분석하기 ✦
-            </button>
-          </section>
+                    {/* Photo Upload Zone */}
+                    <div className="space-y-6">
+                      <label className="font-label-caps text-on-surface-variant block text-center tracking-wider font-semibold">SILHOUETTE CAPTURE</label>
+                      <div 
+                        className={`border-2 border-dashed rounded-2xl p-12 flex flex-col items-center justify-center group transition-all cursor-pointer ${
+                          isDragActive 
+                            ? 'border-primary bg-primary/5 shadow-inner' 
+                            : 'border-outline-variant bg-surface/50 hover:border-primary hover:bg-primary/5'
+                        }`} 
+                        id="upload-zone"
+                        onDragEnter={handleDrag}
+                        onDragOver={handleDrag}
+                        onDragLeave={handleDrag}
+                        onDrop={handleDrop}
+                        onClick={triggerFileInput}
+                      >
+                        {image ? (
+                          <div className="relative w-full max-w-[240px] aspect-[3/4] rounded-lg overflow-hidden shadow-md" onClick={(e) => e.stopPropagation()}>
+                            <img src={image} alt="Uploaded style preview" className="w-full h-full object-cover" />
+                            <button 
+                              type="button" 
+                              className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center text-xl hover:bg-black/80 transition-colors shadow-lg" 
+                              onClick={removeImage}
+                            >
+                              &times;
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="w-16 h-16 rounded-full bg-primary-container/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                              <span className="material-symbols-outlined text-primary text-3xl">add_a_photo</span>
+                            </div>
+                            <h3 className="text-body-lg font-semibold text-on-surface mb-2">Upload Full-Body Photo</h3>
+                            <p className="text-body-sm text-on-surface-variant text-center max-w-sm mb-6">
+                              Drag and drop or click to browse. Supported formats: JPG, PNG (Max 10MB).
+                            </p>
+                            <div className="flex gap-8 items-center pt-6 border-t border-outline-variant/30 w-full justify-center">
+                              <div className="flex items-center gap-2 text-body-sm text-on-surface-variant">
+                                <span className="material-symbols-outlined text-primary text-lg">light_mode</span>
+                                Well-lit
+                              </div>
+                              <div className="flex items-center gap-2 text-body-sm text-on-surface-variant">
+                                <span className="material-symbols-outlined text-primary text-lg">person</span>
+                                Full-body
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                      <input 
+                        type="file" 
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        accept="image/*"
+                        className="hidden"
+                      />
+                      <div className="flex items-center justify-center gap-3 bg-secondary-container/30 py-3 px-6 rounded-lg border border-secondary-container/50">
+                        <span className="material-symbols-outlined text-secondary text-lg" data-weight="fill">lock</span>
+                        <p className="text-body-sm text-on-secondary-fixed-variant text-xs">
+                          Your photos are processed securely and deleted immediately after analysis.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Submit Action */}
+                    <div className="pt-6">
+                      <button 
+                        type="button" 
+                        onClick={runAnalysis}
+                        disabled={!image}
+                        className={`w-full text-on-primary font-button text-lg py-5 rounded-xl shadow-xl hover:shadow-2xl hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all ${
+                          image ? 'bg-primary cursor-pointer hover:opacity-95' : 'bg-primary/40 cursor-not-allowed opacity-60'
+                        }`}
+                      >
+                        Start Style Analysis
+                      </button>
+                      <p className="text-center text-[10px] text-outline mt-4 font-label-caps tracking-wider">BY PROCEEDING, YOU AGREE TO OUR BIOMETRIC DATA POLICY</p>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </section>
+
+            {/* Trust & Value Proposition */}
+            <section className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-16 md:py-24">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+                <div className="space-y-4 text-center md:text-left reveal active">
+                  <span className="material-symbols-outlined text-4xl text-primary" data-weight="fill">verified</span>
+                  <h4 className="font-headline-sm font-semibold">Privacy First</h4>
+                  <p className="text-body-md text-on-surface-variant">Our SOC-2 compliant engine ensures your biometric data never leaves our encrypted sandbox.</p>
+                </div>
+                <div className="space-y-4 text-center md:text-left reveal active" style={{ transitionDelay: '100ms' }}>
+                  <span className="material-symbols-outlined text-4xl text-primary" data-weight="fill">psychology</span>
+                  <h4 className="font-headline-sm font-semibold">AI-First Design</h4>
+                  <p className="text-body-md text-on-surface-variant">Trained on 50 years of haute couture and street style history to find your unique aesthetic.</p>
+                </div>
+                <div className="space-y-4 text-center md:text-left reveal active" style={{ transitionDelay: '200ms' }}>
+                  <span className="material-symbols-outlined text-4xl text-primary" data-weight="fill">shopping_bag</span>
+                  <h4 className="font-headline-sm font-semibold">Smart Shopping</h4>
+                  <p className="text-body-md text-on-surface-variant">Direct links to retailers with pre-vetted sizes that actually fit your body shape perfectly.</p>
+                </div>
+              </div>
+            </section>
+          </>
         )}
 
         {status === 'loading' && (
-          <section className="glass-card loading-overlay">
-            <div className="spinner"></div>
-            <p className="loading-text">{loadingText}</p>
-            <p className="loading-subtext">AI가 완벽한 스타일을 매칭하고 있습니다...</p>
-          </section>
+          <div className="min-h-[70vh] flex items-center justify-center px-margin-mobile">
+            <div className="glass-card p-12 rounded-3xl shadow-xl border border-outline-variant/30 max-w-md w-full text-center space-y-6 reveal active">
+              <div className="relative w-20 h-20 mx-auto">
+                <div className="absolute inset-0 rounded-full border-4 border-primary-container/30"></div>
+                <div className="absolute inset-0 rounded-full border-4 border-t-primary animate-spin"></div>
+                <span className="material-symbols-outlined text-primary text-3xl absolute inset-0 flex items-center justify-center animate-pulse">auto_awesome</span>
+              </div>
+              <h3 className="text-headline-sm text-on-surface font-semibold">{loadingText}</h3>
+              <p className="text-body-sm text-on-surface-variant">AI가 체형의 특징을 실시간 스캔하여 맞춤형 패션 처방을 조율하는 중입니다.</p>
+            </div>
+          </div>
         )}
 
         {status === 'result' && result && (
-          <section className="glass-card result-card">
-            <h2 className="card-title">체형 및 스타일 분석 결과</h2>
-            
-            <div className="result-header">
-              {image && (
-                <div className="result-avatar-container">
-                  <img src={image} alt="User silhouette" className="result-avatar" />
+          <div className="max-w-4xl mx-auto px-margin-mobile py-12 reveal active">
+            <div className="glass-card rounded-3xl overflow-hidden shadow-2xl border border-outline-variant/30">
+              <div className="bg-primary/10 p-8 md:p-12 border-b border-outline-variant/20 flex flex-col md:flex-row items-center gap-8">
+                {image && (
+                  <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-lg shrink-0">
+                    <img src={image} alt="User silhouette" className="w-full h-full object-cover" />
+                  </div>
+                )}
+                <div className="text-center md:text-left space-y-2">
+                  <span className="font-label-caps text-primary tracking-widest block font-bold text-xs">ANALYSIS REPORT</span>
+                  <h2 className="font-headline-md text-on-surface font-semibold text-2xl md:text-3xl">{result.bodyType}</h2>
+                  <p className="text-body-md text-on-surface-variant">
+                    신체 프로필: <span className="font-semibold text-primary">{height}cm</span> / <span className="font-semibold text-primary">{weight}kg</span> (BMI {result.bmi})
+                  </p>
                 </div>
-              )}
-              <div className="result-info">
-                <h3>{result.bodyType}</h3>
-                <p>신체 프로필: {height}cm / {weight}kg (BMI {result.bmi})</p>
+              </div>
+              
+              <div className="p-8 md:p-12 grid grid-cols-1 md:grid-cols-2 gap-12">
+                <div className="space-y-6">
+                  <div className="flex items-center gap-2 text-primary">
+                    <span className="material-symbols-outlined">auto_awesome</span>
+                    <h4 className="font-label-caps font-bold tracking-wider text-xs">체형 기반 스타일링 솔루션</h4>
+                  </div>
+                  <p className="text-body-md text-on-surface-variant leading-relaxed bg-surface/50 p-6 rounded-2xl border border-outline-variant/20">
+                    {result.styleTips}
+                  </p>
+                </div>
+
+                <div className="space-y-8">
+                  <div>
+                    <div className="flex items-center gap-2 text-primary mb-4">
+                      <span className="material-symbols-outlined">style</span>
+                      <h4 className="font-label-caps font-bold tracking-wider text-xs">추천 스타일 키워드</h4>
+                    </div>
+                    <div className="flex flex-wrap gap-3">
+                      {result.recommendations.map((tag, idx) => (
+                        <span key={idx} className="bg-primary/10 text-primary px-4 py-2 rounded-full text-body-sm font-semibold">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-2 text-primary mb-3">
+                      <span className="material-symbols-outlined">palette</span>
+                      <h4 className="font-label-caps font-bold tracking-wider text-xs">추천 퍼스널 컬러 톤</h4>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {result.bestColors.map((color, idx) => (
+                        <span key={idx} className="border border-outline-variant/40 bg-surface/30 px-4 py-2 rounded-lg text-body-sm text-on-surface-variant">
+                          {color}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-8 bg-surface-container/50 border-t border-outline-variant/10 flex justify-center">
+                <button 
+                  type="button" 
+                  onClick={resetAll}
+                  className="bg-primary text-on-primary px-8 py-4 rounded-xl font-button shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center gap-2 hover:opacity-95"
+                >
+                  <span className="material-symbols-outlined text-lg">refresh</span>
+                  다시 분석하기
+                </button>
               </div>
             </div>
-
-            <div className="result-grid">
-              <div className="info-item">
-                <h4>✨ 체형 기반 스타일링 솔루션</h4>
-                <p>{result.styleTips}</p>
-              </div>
-
-              <div className="info-item">
-                <h4>🎨 추천 스타일 키워드</h4>
-                <div className="style-tags">
-                  {result.recommendations.map((tag, idx) => (
-                    <span key={idx} className="tag">{tag}</span>
-                  ))}
-                </div>
-                
-                <h4 style={{ marginTop: '20px' }}>🌈 추천 퍼스널 컬러 톤</h4>
-                <p>{result.bestColors.join(', ')}</p>
-              </div>
-            </div>
-
-            <button 
-              type="button" 
-              onClick={resetAll}
-              className="action-button btn-secondary"
-            >
-              다시 분석하기 ↺
-            </button>
-          </section>
+          </div>
         )}
       </main>
+
+      {/* Auth Modal */}
+      {isAuthModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-margin-mobile" onClick={() => setIsAuthModalOpen(false)}>
+          <div className="glass-card p-8 rounded-3xl max-w-sm w-full shadow-2xl border border-outline-variant/30 relative space-y-6 animate-fade-in" onClick={(e) => e.stopPropagation()}>
+            <button 
+              type="button" 
+              className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors"
+              onClick={() => setIsAuthModalOpen(false)}
+            >
+              <span className="material-symbols-outlined text-lg">close</span>
+            </button>
+            
+            <div className="text-center">
+              <h3 className="text-headline-sm text-on-surface font-bold text-xl">
+                {authMode === 'login' ? 'Welcome Back' : 'Create Account'}
+              </h3>
+              <p className="text-body-sm text-on-surface-variant mt-1 text-xs">
+                {authMode === 'login' ? 'AURA의 프리미엄 AI 스타일 분석을 경험하세요' : 'AURA 클럽의 멤버가 되어 스타일 진화를 시작하세요'}
+              </p>
+            </div>
+
+            <form className="space-y-4" onSubmit={handleAuth}>
+              <div>
+                <label className="font-label-caps text-on-surface-variant block mb-1 text-[10px] font-bold tracking-wider">EMAIL</label>
+                <input 
+                  type="email" 
+                  required 
+                  value={authEmail} 
+                  onChange={(e) => setAuthEmail(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-outline-variant/30 bg-surface/50 text-on-surface focus:outline-none focus:border-primary transition-colors text-body-sm"
+                  placeholder="your@email.com"
+                />
+              </div>
+              
+              <div>
+                <label className="font-label-caps text-on-surface-variant block mb-1 text-[10px] font-bold tracking-wider">PASSWORD</label>
+                <input 
+                  type="password" 
+                  required 
+                  minLength={6}
+                  value={authPassword} 
+                  onChange={(e) => setAuthPassword(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-outline-variant/30 bg-surface/50 text-on-surface focus:outline-none focus:border-primary transition-colors text-body-sm"
+                  placeholder="•••••• (6자 이상)"
+                />
+              </div>
+
+              {authError && (
+                <p className="text-error text-xs text-left bg-error-container/20 p-3 rounded-lg border border-error/20 leading-relaxed whitespace-pre-line font-medium">
+                  {authError}
+                </p>
+              )}
+
+              <button 
+                type="submit" 
+                disabled={authLoading}
+                className="w-full bg-primary text-on-primary py-4 rounded-xl font-button shadow-lg hover:shadow-xl hover:opacity-95 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {authLoading ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-lg">login</span>
+                    {authMode === 'login' ? '로그인' : '회원 가입'}
+                  </>
+                )}
+              </button>
+            </form>
+
+            <div className="text-center pt-2 border-t border-outline-variant/20">
+              <button 
+                type="button" 
+                className="text-primary font-button text-xs hover:underline cursor-pointer"
+                onClick={() => {
+                  setAuthMode(authMode === 'login' ? 'signup' : 'login');
+                  setAuthError('');
+                }}
+              >
+                {authMode === 'login' ? '계정이 없으신가요? 회원 가입하기' : '이미 계정이 있으신가요? 로그인하기'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <footer className="w-full bg-surface-container border-t border-outline-variant mt-12">
@@ -534,4 +758,3 @@ JSON 구조 예시:
 }
 
 export default App
-
