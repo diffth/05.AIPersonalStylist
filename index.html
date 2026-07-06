@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ko">
+<html lang="ko" class="scroll-smooth">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
     <!-- 기본 SEO 태그 -->
-    <title>AI Personal Stylist - 나만의 AI 개인 스타일리스트</title>
+    <title>AURA FASHION | Your AI Style Evolution</title>
     <meta name="description" content="본인의 사진, 키, 몸무게를 기반으로 체형을 분석하고 최적의 스타일을 추천해주는 AI 개인 스타일리스트 서비스입니다." />
     <meta name="keywords" content="AI 스타일리스트, 퍼스널 스타일링, 체형 분석, 패션 코디, 퍼스널 컬러, 옷 추천, 스타일 추천" />
     <meta name="author" content="AI Personal Stylist Team" />
@@ -18,16 +18,16 @@
     
     <!-- 오픈 그래프 (Open Graph) - 네이버, 페이스북, 카카오톡용 -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="AI Personal Stylist - 나만의 AI 개인 스타일리스트" />
+    <meta property="og:title" content="AURA FASHION | 나만의 AI 스타일리스트" />
     <meta property="og:description" content="본인의 사진, 키, 몸무게를 기반으로 체형을 분석하고 최적의 스타일을 추천해주는 AI 개인 스타일리스트 서비스입니다." />
     <meta property="og:image" content="https://05-aipersonalstylist.pages.dev/og-image.png" />
     <meta property="og:url" content="https://05-aipersonalstylist.pages.dev" />
-    <meta property="og:site_name" content="AI Personal Stylist" />
+    <meta property="og:site_name" content="AURA Fashion" />
     <meta property="og:locale" content="ko_KR" />
     
     <!-- 트위터 카드 (Twitter Cards) - X용 -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="AI Personal Stylist - 나만의 AI 개인 스타일리스트" />
+    <meta name="twitter:title" content="AURA FASHION | 나만의 AI 스타일리스트" />
     <meta name="twitter:description" content="본인의 사진, 키, 몸무게를 기반으로 체형을 분석하고 최적의 스타일을 추천해주는 AI 개인 스타일리스트 서비스입니다." />
     <meta name="twitter:image" content="https://05-aipersonalstylist.pages.dev/og-image.png" />
     
@@ -39,6 +39,137 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+
+    <!-- Tailwind 테마 커스텀 구성 -->
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+              "error-container": "#ffdad6",
+              "on-secondary-container": "#794949",
+              "primary-container": "#9f5ba3",
+              "primary": "#844389",
+              "on-primary": "#ffffff",
+              "error": "#ba1a1a",
+              "surface-container-highest": "#e1e3e4",
+              "on-tertiary-container": "#fffbff",
+              "inverse-primary": "#faacfa",
+              "tertiary-fixed-dim": "#b6c4ff",
+              "primary-fixed-dim": "#faacfa",
+              "on-error-container": "#93000a",
+              "charcoal-text": "#1A202C",
+              "surface-container-lowest": "#ffffff",
+              "surface": "#f8f9fa",
+              "on-tertiary-fixed-variant": "#063ab0",
+              "surface-container": "#edeeef",
+              "primary-fixed": "#ffd6fb",
+              "on-secondary": "#ffffff",
+              "surface-variant": "#e1e3e4",
+              "tertiary-fixed": "#dce1ff",
+              "on-tertiary-fixed": "#001550",
+              "outline": "#81737e",
+              "on-surface-variant": "#4f434d",
+              "inverse-surface": "#2e3132",
+              "inverse-on-surface": "#f0f1f2",
+              "surface-tint": "#87458b",
+              "surface-bright": "#f8f9fa",
+              "outline-variant": "#d2c2ce",
+              "secondary-fixed-dim": "#f7b6b6",
+              "tertiary": "#2c52c6",
+              "on-primary-fixed": "#36003d",
+              "on-background": "#191c1d",
+              "off-white": "#FDFBF9",
+              "background": "#f8f9fa",
+              "deep-lavender": "#8E44AD",
+              "muted-rose": "#D4A5A5",
+              "secondary-fixed": "#ffdad9",
+              "on-tertiary": "#ffffff",
+              "secondary": "#835151",
+              "on-primary-container": "#fffbff",
+              "surface-container-high": "#e7e8e9",
+              "on-secondary-fixed-variant": "#673a3b",
+              "on-error": "#ffffff",
+              "secondary-container": "#fdbcbc",
+              "on-surface": "#191c1d",
+              "on-primary-fixed-variant": "#6c2d71",
+              "tertiary-container": "#496ce0",
+              "surface-container-low": "#f3f4f5",
+              "on-secondary-fixed": "#341012",
+              "surface-dim": "#d9dadb"
+            },
+            "borderRadius": {
+              "DEFAULT": "0.25rem",
+              "lg": "0.5rem",
+              "xl": "0.75rem",
+              "full": "9999px"
+            },
+            "spacing": {
+              "gutter": "24px",
+              "base": "8px",
+              "margin-mobile": "20px",
+              "section-gap": "80px",
+              "container-max": "1280px",
+              "margin-desktop": "64px"
+            },
+            "fontFamily": {
+              "display-lg": ["Playfair Display"],
+              "label-caps": ["Inter"],
+              "button": ["Inter"],
+              "body-sm": ["Inter"],
+              "headline-sm": ["Playfair Display"],
+              "headline-md": ["Playfair Display"],
+              "display-lg-mobile": ["Playfair Display"],
+              "body-md": ["Inter"],
+              "body-lg": ["Inter"]
+            },
+            "fontSize": {
+              "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+              "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+              "button": ["15px", {"lineHeight": "20px", "fontWeight": "600"}],
+              "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+              "headline-sm": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+              "headline-md": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+              "display-lg-mobile": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+              "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+              "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+    <style>
+      .glass-card {
+          background: rgba(255, 255, 255, 0.7);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+      input[type="range"]::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 24px;
+          height: 24px;
+          background: #844389;
+          cursor: pointer;
+          border-radius: 50%;
+          border: 3px solid white;
+          box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+      }
+      .material-symbols-outlined {
+          font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .reveal {
+          opacity: 0;
+          transform: translateY(20px);
+          transition: all 0.8s ease-out;
+      }
+      .reveal.active {
+          opacity: 1;
+          transform: translateY(0);
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
