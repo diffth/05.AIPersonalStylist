@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import type { DragEvent, ChangeEvent } from 'react'
-import { supabase } from './supabaseClient'
+import { supabase, isSupabaseConfigured } from './supabaseClient'
 
 type AppState = 'idle' | 'loading' | 'result';
 
@@ -51,6 +51,11 @@ function App() {
 
   // Supabase Auth 세션 리스너 및 초기 조회
   useEffect(() => {
+    if (!isSupabaseConfigured) {
+      console.warn("Supabase is not configured. Authentication features are disabled.");
+      return;
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
     });
@@ -176,7 +181,8 @@ function App() {
 
   // 분석 실행
   const runAnalysis = async () => {
-    if (!user) {
+    // Supabase가 구성되었을 때만 로그인을 요구합니다. 구성되지 않았을 때는 데모 모드로 바로 분석 가능하게 조치합니다.
+    if (isSupabaseConfigured && !user) {
       setAuthError('스타일 분석을 이용하려면 먼저 로그인해야 합니다.');
       setAuthMode('login');
       setIsAuthModalOpen(true);
@@ -390,6 +396,32 @@ JSON 구조 예시:
       </header>
 
       <main className="pt-24 flex-grow">
+        {/* Supabase 설정 누락 경고 배너 */}
+        {!isSupabaseConfigured && (
+          <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop mt-4 mb-4">
+            <div className="bg-error-container/60 backdrop-blur-md border border-error/20 p-6 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-lg">
+              <div className="flex items-start gap-4">
+                <span className="material-symbols-outlined text-error text-3xl mt-0.5 md:mt-0">warning</span>
+                <div className="text-left">
+                  <h3 className="font-semibold text-charcoal-text text-lg">Supabase 환경 변수가 설정되지 않았습니다</h3>
+                  <p className="text-on-surface-variant text-body-sm mt-1 max-w-2xl leading-relaxed">
+                    현재 회원가입 및 로그인 등 Supabase 연동 기능이 비활성화된 상태입니다. <br className="hidden sm:inline" />
+                    <strong>Cloudflare Pages</strong>에 배포하셨다면 Pages 대시보드의 <strong>Settings &gt; Variables</strong> 설정에 <code>VITE_SUPABASE_URL</code>과 <code>VITE_SUPABASE_ANON_KEY</code>를 등록하고 다시 배포해 주세요! (로컬인 경우 <code>.env</code> 파일 설정을 확인하세요)
+                  </p>
+                </div>
+              </div>
+              <a 
+                href="https://dash.cloudflare.com" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="bg-error text-white font-button px-5 py-2.5 rounded-xl hover:opacity-90 active:scale-95 transition-all text-center self-stretch md:self-auto text-sm shrink-0 shadow-md"
+              >
+                대시보드로 가기
+              </a>
+            </div>
+          </div>
+        )}
+
         {status === 'idle' && (
           <>
             {/* Hero Section */}
