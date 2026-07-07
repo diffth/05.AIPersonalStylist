@@ -20,7 +20,7 @@ export const onRequestOptions: PagesFunction<Env> = async () => {
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   try {
     const { request, env } = context;
-    const { image, height, weight } = await request.json<{ image: string; height: number; weight: number }>();
+    const { image, height, weight, city } = await request.json<{ image: string; height: number; weight: number; city?: string }>();
 
     const apiKey = env.GEMINI_API_KEY || env.VITE_GEMINI_API_KEY;
     if (!apiKey) {
@@ -42,8 +42,10 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     // 구글 Gemini 3.1 Flash Lite API 엔드포인트 및 프롬프트 정의
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`;
 
+    const cityText = city ? `\n- 사용자가 위치한 도시: ${city} (이 도시의 지리적 위치, 기후 특성, 계절적인 스타일링 요소를 스타일 팁에 위트 있게 살짝 녹여 주세요)` : '';
+
     const prompt = `당신은 세계적인 패션 디자이너이자 개인 스타일리스트, 체형 분석 전문가입니다. 
-제공된 사용자의 사진과 다음 입력 정보(키: ${height}cm, 몸무게: ${weight}kg, 계산된 BMI: ${bmi})를 기반으로, 사용자의 골격과 체형 실루엣을 전문적으로 분석하고 맞춤형 코디 제안을 해주세요.
+제공된 사용자의 사진과 다음 입력 정보(키: ${height}cm, 몸무게: ${weight}kg, 계산된 BMI: ${bmi}${cityText})를 기반으로, 사용자의 골격과 체형 실루엣을 전문적으로 분석하고 맞춤형 코디 제안을 해주세요.
 
 분석 기준:
 1. 사용자의 사진에서 실루엣과 바디라인을 감정하여 적절한 체형 타입(예: 모래시계형, 삼각형, 직사각형, 역삼각형, 둥근형 등)을 결정하세요.
