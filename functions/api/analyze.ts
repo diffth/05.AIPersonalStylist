@@ -3,6 +3,20 @@ interface Env {
   VITE_GEMINI_API_KEY?: string;
 }
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Content-Type": "application/json; charset=utf-8"
+};
+
+export const onRequestOptions: PagesFunction<Env> = async () => {
+  return new Response(null, {
+    status: 204,
+    headers: corsHeaders
+  });
+};
+
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   try {
     const { request, env } = context;
@@ -12,7 +26,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     if (!apiKey) {
       return new Response(JSON.stringify({ error: { message: "Cloudflare 환경변수(GEMINI_API_KEY)가 구성되지 않았습니다. Variables and Secrets 설정을 확인해 주세요." } }), {
         status: 500,
-        headers: { "Content-Type": "application/json; charset=utf-8" }
+        headers: corsHeaders
       });
     }
 
@@ -74,20 +88,20 @@ JSON 구조 예시:
       const errorText = await response.text();
       return new Response(errorText, {
         status: response.status,
-        headers: { "Content-Type": "application/json; charset=utf-8" }
+        headers: corsHeaders
       });
     }
 
     const responseData = await response.json();
     return new Response(JSON.stringify(responseData), {
       status: 200,
-      headers: { "Content-Type": "application/json; charset=utf-8" }
+      headers: corsHeaders
     });
 
   } catch (err: any) {
     return new Response(JSON.stringify({ error: { message: err.message } }), {
       status: 500,
-      headers: { "Content-Type": "application/json; charset=utf-8" }
+      headers: corsHeaders
     });
   }
 };
