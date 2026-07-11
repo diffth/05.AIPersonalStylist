@@ -7,9 +7,13 @@ type AppState = 'idle' | 'loading' | 'result';
 interface AnalysisResult {
   bmi: number;
   bodyType: string;
-  recommendations: string[];
-  styleTips: string;
+  bodyAnalysis: string;
   bestColors: string[];
+  personalColorTips: string;
+  recommendations: string[];
+  recommendedItems: string;
+  avoidStyles: string;
+  styleTips: string;
 }
 
 function App() {
@@ -224,23 +228,36 @@ function App() {
 
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`;
 
-        const prompt = `당신은 세계적인 패션 디자이너이자 개인 스타일리스트, 체형 분석 전문가입니다. 
-제공된 사용자의 사진과 다음 입력 정보(키: ${height}cm, 몸무게: ${weight}kg, 계산된 BMI: ${bmi})를 기반으로, 사용자의 골격과 체형 실루엣을 전문적으로 분석하고 맞춤형 코디 제안을 해주세요.
+        const prompt = `당신은 전문 퍼스널 스타일리스트입니다.
+제공된 사용자의 사진과 다음 입력 정보(키: ${height}cm, 몸무게: ${weight}kg, 계산된 BMI: ${bmi})를 기반으로, 사용자의 골격과 체형 실루엣을 정밀 분석하여 맞춤형 스타일 컨설팅 보고서를 친절하고 전문적인 톤으로 작성해주세요.
 
-분석 기준:
-1. 사용자의 사진에서 실루엣과 바디라인을 감정하여 적절한 체형 타입(예: 모래시계형, 삼각형, 직사각형, 역삼각형, 둥근형 등)을 결정하세요.
-2. 분석 결과를 바탕으로, 체형의 장점은 돋보이게 하고 단점은 커버할 수 있는 매력적인 코디 스타일 팁을 친절하고 자세한 한글 텍스트로 작성해 주세요. (250자 내외)
-3. 해당 체형에 가장 잘 어울릴 스타일 해시태그 3가지를 뽑아내세요.
-4. 사용자에게 가장 조화롭게 추천될 대표적인 퍼스널 컬러/색상 톤 3가지를 선정하세요.
+보고서에는 반드시 다음 내용을 상세히 포함시켜주세요:
+1. 체형분석 (bodyType & bodyAnalysis)
+   - bodyType: 사진과 신체 수치를 기반으로 감정한 사용자의 구체적인 체형 타입 (예: 모래시계형, 삼각형, 직사각형, 역삼각형, 둥근형 등)
+   - bodyAnalysis: 골격 형태와 비율 특징에 대한 전문적인 체형 분석 설명 (200자 내외)
+2. 퍼스널 컬러 추천 (bestColors & personalColorTips)
+   - bestColors: 가장 조화롭고 잘 어울리는 대표 퍼스널 컬러 색상 3가지를 담은 배열
+   - personalColorTips: 선정된 컬러 톤을 실생활 코디에 어떻게 조화롭게 접목할지에 대한 퍼스널 컬러 스타일링 팁 (200자 내외)
+3. 어울리는 스타일 및 패션 아이템 추천 (recommendations & recommendedItems)
+   - recommendations: 추천 스타일 무드를 직관적으로 나타내는 해시태그 3가지를 담은 배열
+   - recommendedItems: 해당 체형의 매력을 극대화하거나 단점을 멋지게 보완할 수 있는 구체적인 옷 종류 및 패션 아이템 추천 목록 (150자 내외)
+4. 피해야 할 스타일 (avoidStyles)
+   - avoidStyles: 체형 보완을 위해 가급적 매치를 지양하거나 피해야 하는 실루엣, 옷의 패턴, 특정 디자인 디테일 설명 (200자 내외)
+5. 코디 팁 (styleTips)
+   - styleTips: 일상에서 바로 적용하기 유용하며 스타일지수를 높여줄 실용적이고 센스 있는 구체적인 코디 팁 (200자 내외)
 
 반드시 아래 제공된 JSON 형식의 스키마로만 응답해야 하며, 그 외의 다른 불필요한 설명 텍스트나 마크다운 코드 블록 표시(\`\`\`json)는 절대 결과에 포함하지 마십시오. 오직 바로 파싱 가능한 유효한 JSON 문자열만 반환해야 합니다.
 
 JSON 구조 예시:
 {
   "bodyType": "슬림하고 어깨가 돋보이는 역삼각형 체형",
-  "styleTips": "어깨 라인의 세련됨을 강조하면서도, 하의에 와이드 팬츠나 A라인 스커트를 매치해 하체 볼륨감을 조화롭게 연출하는 코디를 추천합니다. 부드러운 드레이프 소재의 상의를 선택하면 한결 우아하고 고급스러운 실루엣을 연출할 수 있습니다.",
+  "bodyAnalysis": "상체에 비해 하체가 슬림한 편이며 어깨선이 발달되어 세련되고 시크한 분위기를 자아냅니다. 상하체의 시각적 균형을 잡아주는 것이 스타일링의 포인트입니다.",
+  "bestColors": ["로즈 베이지", "차콜 그레이", "올리브 그린"],
+  "personalColorTips": "차분한 올리브 그린과 차콜 그레이로 지적인 무드를 연출하고, 밝은 로즈 베이지를 이너나 포인트 아이템으로 활용해 얼굴빛을 한층 환하게 켜주세요.",
   "recommendations": ["#어깨포인트", "#A라인코디", "#페미닌캐주얼"],
-  "bestColors": ["로즈 베이지", "차콜 그레이", "올리브 그린"]
+  "recommendedItems": "와이드 핏 데님 슬랙스, A라인 플레어 스커트, 네크라인이 깊게 파인 브이넥 니트, 드롭 숄더 재킷",
+  "avoidStyles": "어깨패드가 과도하게 강조된 재킷이나 목을 꽉 덮는 터틀넥, 상체에 화려한 프릴이 가득한 디테일은 피하시는 것이 좋습니다.",
+  "styleTips": "어깨 라인의 세련됨을 살리기 위해 깊은 브이넥이나 스퀘어넥 상의를 입고, 하의는 풍성한 A라인 스커트를 매치해 모래시계 실루엣을 완성하는 센스를 발휘해보세요."
 }
 `;
 
@@ -300,9 +317,13 @@ JSON 구조 예시:
       setResult({
         bmi,
         bodyType: parsedData.bodyType || '커스텀 분석 체형',
-        styleTips: parsedData.styleTips || '체형 분석 결과를 해석하지 못했습니다. 베이직 셔츠와 와이드 슬랙스 코디를 추천합니다.',
-        recommendations: parsedData.recommendations || ['#베이직룩', '#모던웨어'],
-        bestColors: parsedData.bestColors || ['네이비 블루', '차콜 그레이']
+        bodyAnalysis: parsedData.bodyAnalysis || '골격과 실루엣 비율이 균형을 이루는 체형입니다.',
+        bestColors: parsedData.bestColors || ['네이비 블루', '차콜 그레이', '크림'],
+        personalColorTips: parsedData.personalColorTips || '차분한 모노톤 계열로 도회적인 느낌을 줍니다.',
+        recommendations: parsedData.recommendations || ['#베이직룩', '#모던웨어', '#데일리코디'],
+        recommendedItems: parsedData.recommendedItems || '기본 티셔츠와 와이드 핏 슬랙스',
+        avoidStyles: parsedData.avoidStyles || '체형에 과도하게 맞지 않는 과장된 디테일의 아우터',
+        styleTips: parsedData.styleTips || '체형 분석 결과를 해석하지 못했습니다. 베이직 셔츠와 와이드 슬랙스 코디를 추천합니다.'
       });
       setStatus('result');
     } catch (error: any) {
@@ -312,33 +333,53 @@ JSON 구조 예시:
       const bmi = parseFloat((weight / (heightInMeters * heightInMeters)).toFixed(1));
       
       let bodyType = '균형 잡힌 표준 체형';
-      let styleTips = '가장 기본적인 균형이 잘 잡힌 체형입니다. 미니멀한 남방셔츠나 클래식한 와이드 슬랙스로 모던하고 정갈한 실루엣을 완성하는 것이 좋습니다.';
-      let recommendations = ['#미니멀룩', '#클래식수트', '#모던시크'];
+      let bodyAnalysis = '상하체의 비율이 조화롭고 대칭이 잘 맞는 가장 이상적인 표준형 골격을 지니고 있습니다. 유행하는 다양한 스타일을 무난하고 세련되게 소화할 수 있는 강력한 장점이 있습니다.';
       let bestColors = ['네이비 블루', '차콜 그레이', '크림'];
+      let personalColorTips = '단정하고 지적인 매력을 돋보이게 하는 네이비와 차콜 그레이를 베이스로 삼고, 부드러운 크림색으로 포인트를 주면 신뢰감을 주는 스타일이 완성됩니다.';
+      let recommendations = ['#미니멀룩', '#클래식수트', '#모던시크'];
+      let recommendedItems = '클래식한 와이드 슬랙스, 딱 떨어지는 핏의 베이직 셔츠, 미니멀한 가죽 재킷, 단정한 로퍼';
+      let avoidStyles = '상하체의 예쁜 비율을 가려버리는 지나치게 크고 형태감이 없는 벌룬 핏이나 어중간한 기장의 아우터';
+      let styleTips = '허리 라인을 살려 단정하게 셔츠를 바지 안으로 넣어 입거나(넣입), 깔끔한 톤온톤 셋업 스타일링으로 본연의 훌륭한 비율을 극대화해 보세요.';
 
       if (bmi < 18.5) {
         bodyType = '슬림하고 직선적인 체형';
-        styleTips = '전체적으로 가냘픈 실루엣을 지녔습니다. 오버사이즈 레이어드 룩이나 어깨 패턴이 강조된 재킷, 볼륨감 있는 니트웨어를 매치하여 상체에 입체감을 불어넣는 스타일을 추천합니다.';
-        recommendations = ['#오버사이즈룩', '#레이어드코디', '#캐주얼스트릿'];
+        bodyAnalysis = '전체적으로 체지방률이 낮고 골격이 가늘어 실루엣이 직선적이고 가냘픈 느낌을 줍니다. 바디라인의 굴곡보다는 모던하고 슬림한 느낌을 강조하거나 볼륨감을 레이어드로 보완하기에 적합합니다.';
         bestColors = ['웜 아이보리', '올리브 그린', '파스텔 블러썸'];
+        personalColorTips = '따뜻하고 부드러운 파스텔 톤과 아이보리는 왜소해 보일 수 있는 실루엣을 시각적으로 팽창시켜 주어 한결 안정감 있고 부드러운 인상을 만듭니다.';
+        recommendations = ['#오버사이즈룩', '#레이어드코디', '#캐주얼스트릿'];
+        recommendedItems = '벌키한 니트웨어, 어깨 패드가 들어간 테일러드 재킷, 카고 팬츠, 레이어드용 롱 셔츠';
+        avoidStyles = '온몸에 꽉 끼는 타이트한 스키니진이나 민소매 상의는 가냘픈 체형을 더욱 도드라지게 하므로 피하는 것이 좋습니다.';
+        styleTips = '오버사이즈 재킷에 루즈핏 팬츠를 매치하거나, 셔츠 위에 니트 베스트를 겹쳐 입는 레이어드 룩으로 입체적인 실루엣을 완성해보세요.';
       } else if (bmi >= 23 && bmi < 25) {
         bodyType = '탄탄하고 듬직한 에슬레저 체형';
-        styleTips = '골격과 근육이 발달한 건강미 넘치는 체형입니다. 지나치게 타이트한 옷보다는 자연스러운 세미 오버핏 셔츠 and 테이퍼드 팬츠 조합이 좋습니다. 스포티한 디테일을 가미해 매력을 극대화해보세요.';
-        recommendations = ['#아메카지룩', '#스포티캐주얼', '#세미오버핏'];
+        bodyAnalysis = '어깨와 바스트, 골격이 발달하고 근육질의 건강미가 돋보이는 체형입니다. 강인하고 활동적인 이미지를 풍기며, 스포티하고 편안한 어반 아웃도어나 아메카지 룩이 매우 잘 어울립니다.';
         bestColors = ['카키 그린', '머스타드 옐로우', '매트 블랙'];
+        personalColorTips = '자연스럽고 묵직한 카키와 블랙은 체격을 탄탄하게 잡아주며, 머스타드 컬러로 액티브하고 캐주얼한 포인트를 주기 좋습니다.';
+        recommendations = ['#아메카지룩', '#스포티캐주얼', '#세미오버핏'];
+        recommendedItems = '자연스러운 세미 오버핏 셔츠, 테이퍼드 핏 데님 팬츠, 워크 재킷, 스니커즈';
+        avoidStyles = '과도하게 꽉 끼는 머슬핏 상의나 스키니진은 골격을 너무 부각시켜 다소 답답하거나 비대해 보일 수 있으니 지양해 주세요.';
+        styleTips = '어깨선이 살짝 내려오는 세미 오버 실루엣의 상의와 아래로 갈수록 좁아지는 테이퍼드 팬츠를 매치하면 편안하면서도 균형 잡힌 실루엣이 연출됩니다.';
       } else if (bmi >= 25) {
         bodyType = '볼륨감 있고 여유로운 내추럴 체형';
-        styleTips = '풍성하고 여유로운 곡선을 지닌 체형입니다. 세로 스트라이프 패턴이나 V넥 라인을 활용하여 시각적으로 시원한 느낌을 주는 것이 좋습니다. 톤온톤 매칭이나 롱코트로 세로 라인을 연출해보세요.';
-        recommendations = ['#톤온톤코디', '#스트릿웨어', '#이지캐주얼'];
+        bodyAnalysis = '전체적으로 곡선이 살아있고 체격에 여유와 볼륨감이 느껴지는 편안하고 내추럴한 체형입니다. 시각적으로 시원한 세로 라인을 살려 연출하면 고급스럽고 품격 있는 무드를 자아낼 수 있습니다.';
         bestColors = ['미드나잇 블랙', '딥 브라운', '머드 네이비'];
+        personalColorTips = '무게감이 있는 어두운 톤의 딥 브라운과 미드나잇 블랙은 바디 라인을 한층 차분하고 슬림하게 정돈해 주는 수축 효과가 뛰어납니다.';
+        recommendations = ['#톤온톤코디', '#스트릿웨어', '#이지캐주얼'];
+        recommendedItems = '세로 스트라이프 패턴 셔츠, 루즈핏 브이넥 니트, 무릎 아래로 내려오는 롱 싱글코트, 일자핏 스트레이트 팬츠';
+        avoidStyles = '목을 답답하게 덮는 터틀넥이나 너무 얇고 번들거리는 실크 소재, 가로 스트라이프 패턴은 체형을 팽창시켜 보일 수 있으니 주의해 주세요.';
+        styleTips = '상의와 하의의 톤을 비슷하게 맞추는 톤온톤 코디를 선택하고, 아우터를 오픈하여 자연스러운 세로 실루엣을 만드는 것이 날씬해 보이는 꿀팁입니다.';
       }
 
       setResult({
         bmi,
         bodyType,
-        styleTips,
+        bodyAnalysis,
+        bestColors,
+        personalColorTips,
         recommendations,
-        bestColors
+        recommendedItems,
+        avoidStyles,
+        styleTips
       });
       setStatus('result');
     } finally {
@@ -659,45 +700,94 @@ JSON 구조 예시:
               </div>
               
               <div className="p-8 md:p-12 grid grid-cols-1 md:grid-cols-2 gap-12">
-                <div className="space-y-6">
-                  <div className="flex items-center gap-2 text-primary">
-                    <span className="material-symbols-outlined">auto_awesome</span>
-                    <h4 className="font-label-caps font-bold tracking-wider text-xs">체형 기반 스타일링 솔루션</h4>
+                <div className="space-y-8">
+                  {/* 1. 체형 분석 */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-primary">
+                      <span className="material-symbols-outlined">accessibility_new</span>
+                      <h4 className="font-label-caps font-bold tracking-wider text-xs">1. 체형 분석 보고</h4>
+                    </div>
+                    <p className="text-body-md text-on-surface-variant leading-relaxed bg-surface/40 p-5 rounded-2xl border border-outline-variant/20">
+                      {result.bodyAnalysis}
+                    </p>
                   </div>
-                  <p className="text-body-md text-on-surface-variant leading-relaxed bg-surface/50 p-6 rounded-2xl border border-outline-variant/20">
-                    {result.styleTips}
-                  </p>
+
+                  {/* 3. 어울리는 스타일 및 패션 아이템 추천 */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-primary">
+                      <span className="material-symbols-outlined">checkroom</span>
+                      <h4 className="font-label-caps font-bold tracking-wider text-xs">3. 추천 패션 아이템</h4>
+                    </div>
+                    <p className="text-body-md text-on-surface-variant leading-relaxed bg-surface/40 p-5 rounded-2xl border border-outline-variant/20">
+                      {result.recommendedItems}
+                    </p>
+                  </div>
+
+                  {/* 4. 피해야 할 스타일 */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-error">
+                      <span className="material-symbols-outlined">block</span>
+                      <h4 className="font-label-caps font-bold tracking-wider text-xs">4. 피해야 할 워스트 스타일</h4>
+                    </div>
+                    <p className="text-body-md text-on-surface-variant leading-relaxed bg-error-container/10 p-5 rounded-2xl border border-error/20">
+                      {result.avoidStyles}
+                    </p>
+                  </div>
                 </div>
 
                 <div className="space-y-8">
-                  <div>
-                    <div className="flex items-center gap-2 text-primary mb-4">
-                      <span className="material-symbols-outlined">style</span>
-                      <h4 className="font-label-caps font-bold tracking-wider text-xs">추천 스타일 키워드</h4>
+                  {/* 2. 퍼스널 컬러 추천 */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-primary">
+                      <span className="material-symbols-outlined">palette</span>
+                      <h4 className="font-label-caps font-bold tracking-wider text-xs">2. 퍼스널 컬러 제안</h4>
                     </div>
-                    <div className="flex flex-wrap gap-3">
+                    <div className="bg-surface/40 p-5 rounded-2xl border border-outline-variant/20 space-y-4">
+                      <div className="flex flex-wrap gap-2">
+                        {result.bestColors.map((color, idx) => (
+                          <span key={idx} className="bg-primary/5 border border-primary/20 px-3.5 py-1.5 rounded-full text-body-sm font-semibold text-primary">
+                            {color}
+                          </span>
+                        ))}
+                      </div>
+                      <p className="text-body-md text-on-surface-variant leading-relaxed text-sm">
+                        {result.personalColorTips}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* 5. 코디 팁 */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-primary">
+                      <span className="material-symbols-outlined">auto_awesome</span>
+                      <h4 className="font-label-caps font-bold tracking-wider text-xs">5. 실전 스타일링 코디 팁</h4>
+                    </div>
+                    <p className="text-body-md text-on-surface-variant leading-relaxed bg-primary-container/10 p-5 rounded-2xl border border-primary/20">
+                      {result.styleTips}
+                    </p>
+                  </div>
+
+                  {/* 추천 스타일 키워드 */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-primary">
+                      <span className="material-symbols-outlined">style</span>
+                      <h4 className="font-label-caps font-bold tracking-wider text-xs">스타일링 키워드</h4>
+                    </div>
+                    <div className="flex flex-wrap gap-2.5">
                       {result.recommendations.map((tag, idx) => (
-                        <span key={idx} className="bg-primary/10 text-primary px-4 py-2 rounded-full text-body-sm font-semibold">
+                        <span key={idx} className="bg-secondary-container/40 text-on-secondary-container px-3.5 py-1.5 rounded-full text-body-sm font-medium">
                           {tag}
                         </span>
                       ))}
                     </div>
                   </div>
-
-                  <div>
-                    <div className="flex items-center gap-2 text-primary mb-3">
-                      <span className="material-symbols-outlined">palette</span>
-                      <h4 className="font-label-caps font-bold tracking-wider text-xs">추천 퍼스널 컬러 톤</h4>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {result.bestColors.map((color, idx) => (
-                        <span key={idx} className="border border-outline-variant/40 bg-surface/30 px-4 py-2 rounded-lg text-body-sm text-on-surface-variant">
-                          {color}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
                 </div>
+              </div>
+
+              {/* 전문 퍼스널 스타일리스트 안내 푸터 배너 */}
+              <div className="bg-secondary-container/10 border-t border-outline-variant/10 p-6 text-center text-body-sm text-on-surface-variant/80 italic flex items-center justify-center gap-2">
+                <span className="material-symbols-outlined text-base">verified_user</span>
+                <span>본 보고서는 전문 퍼스널 스타일리스트가 사용자의 사진과 신체 정보를 종합적으로 정밀 분석하여 작성한 맞춤형 프리미엄 컨설팅 결과입니다.</span>
               </div>
 
               <div className="p-8 bg-surface-container/50 border-t border-outline-variant/10 flex justify-center">
